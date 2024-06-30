@@ -1,0 +1,22 @@
+{
+  "name": "webhook",
+  "version": "1.0.0",
+  "description": "Webhook for Dialogflow integration",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "webhook",
+    "dialogflow",
+    "uipath"
+  ],
+  "author": "Jean Crespo",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.2",
+    "body-parser": "^1.20.2",
+    "express": "^4.19.2"
+  }
+}
+
