@@ -1,56 +1,56 @@
+// webhook.js
+
 const express = require('express');
 const bodyParser = require('body-parser');
-const axios = require('axios');
+const request = require('request');
+
 const app = express();
+const PORT = process.env.PORT || 3001;
+
+const CONTROL_ROOM = 'https://community.cloud.automationanywhere.digital';
+const BOT_JSON = {
+    fileId: 13155573,
+    runAsUserIds: [],  // Puedes ajustar esto según tus necesidades
+    poolIds: [],
+    overrideDefaultDevice: false,
+    botInput: {}
+};
+const CR_USERNAME = 'e1315299923@live.uleam.edu.ec'
+const CR_PASSWORD = 'Jerick2001.'
 
 app.use(bodyParser.json());
 
-let userCedula = '';
+app.post('/webhook', (req, res) => {
+    const { cedula } = req.body.queryResult.parameters;  // Ajusta según la estructura de tu payload JSON
 
-app.post('/webhook', async (req, res) => {
-    const intent = req.body.queryResult.intent.displayName;
-    let response;
+    // Añadir la cedula al JSON del bot
+    BOT_JSON.botInput.cedula = { type: "STRING", string: cedula };
 
-    if (intent === 'SolicitarDocumento') {
-        response = {
-            fulfillmentText: 'Por favor, ingresa tu cédula.'
-        };
-    } else if (intent === 'GetCedula') {
-        userCedula = req.body.queryResult.parameters.cedula;
-        response = {
-            fulfillmentText: `Cédula recibida: ${userCedula}. Iniciando proceso...`
-        };
-
-        // Enviar solicitud HTTP al Orchestrator para iniciar el proceso
-        const orchestratorUrl = 'https://your-orchestrator-url/odata/Jobs/UiPath.Server.Configuration.OData.StartJobs';
-        const authToken = 'YOUR_AUTH_TOKEN'; // Obtén tu token de autenticación del Orchestrator
-        const processKey = 'YOUR_PROCESS_KEY'; // Clave del proceso en Orchestrator
-
-        try {
-            await axios.post(orchestratorUrl, {
-                startInfo: {
-                    ReleaseKey: processKey,
-                    Strategy: 'ModernJobsCount',
-                    JobsCount: 1,
-                    InputArguments: JSON.stringify({ cedula: userCedula })
-                }
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            console.log('Proceso iniciado en UiPath Orchestrator.');
-        } catch (error) {
-            console.error('Error al iniciar el proceso en UiPath Orchestrator:', error);
+    // Obtener token para acceder al Control Room
+    const authPayload = { username: CR_USERNAME, password: CR_PASSWORD };
+    const authUrl = `${CONTROL_ROOM}/v1/authentication`;
+    request.post(authUrl, { json: authPayload }, (error, response, body) => {
+        if (error) {
+            return res.json({ fulfillmentText: "Error al obtener el token." });
         }
-    }
+        const token = body.token;
 
-    res.json(response);
+        // Enviar la solicitud de despliegue del bot
+        const botUrl = `${CONTROL_ROOM}/v3/automations/deploy`;
+        request.post(botUrl, { json: BOT_JSON, headers: { 'X-Authorization': token } }, (error, response, body) => {
+            if (error) {
+                return res.json({ fulfillmentText: "Error al desplegar el bot." });
+            }
+            return res.json({
+                fulfillmentText: "Gracias por la información. Tu referencia de solicitud es MORT001034. Uno de nuestros consultores te contactará pronto."
+            });
+        });
+    });
+});
+app.get('/webhook', (req, res) => {
+    res.send('Webhook está funcionando correctamente.');
 });
 
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Servidor webhook escuchando en el puerto ${PORT}`);
+    console.log(`Servidor web escuchando en http://localhost:${PORT}`);
 });
