@@ -5,7 +5,7 @@ const bodyParser = require('body-parser');
 const request = require('request');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 10000;
 
 const CONTROL_ROOM = 'https://community.cloud.automationanywhere.digital';
 const BOT_JSON = {
