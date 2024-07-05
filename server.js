@@ -50,9 +50,13 @@ app.post('/webhook', async (req, res) => {
             });
 
             console.log('Proceso activado en UiPath Orchestrator.');
+
         } catch (error) {
+            console.log("===================================================================")
             console.error('Error al activar el proceso en UiPath Orchestrator:', error);
-            respuesta += ' Error al activar el proceso en UiPath Orchestrator:', error;
+            respuesta +=  error;
+            console.log("===========================================================================")
+        
         }
     } else {
         respuesta = 'Por favor, ingresa tanto la cédula como el tipo de documento.';
