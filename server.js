@@ -1,26 +1,57 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const axios = require('axios');
 
 const app = express();
-const port = process.env.PORT || 10000;  // Render debería establecer la variable de entorno PORT
+const port = process.env.PORT || 10000;
 
 app.use(bodyParser.json());
 
-app.post('/webhook', (req, res) => {
-    console.log('Request Body:', JSON.stringify(req.body, null, 2));
-
+// Endpoint para el webhook de Dialogflow
+app.post('/webhook', async (req, res) => {
     const { queryResult } = req.body;
     const Tipodedocumento = queryResult.parameters.Tipodedocumento;
     const cedula = queryResult.parameters.cedula;
-
-    console.log('Tipodedocumento:', Tipodedocumento);
-    console.log('cedula:', cedula);
 
     let respuesta = '';
 
     if (Tipodedocumento && cedula) {
         respuesta = `Tu cédula es ${cedula}. Has seleccionado procesar un documento de tipo ${Tipodedocumento}.`;
-        // Aquí puedes agregar la lógica para generar el certificado correspondiente
+
+        try {
+            // Configuración de UiPath Orchestrator
+            const orchestratorUrl = 'https://cloud.uipath.com';
+            const authToken = 'Vk6u5rLkfjXOl7crIUYFqpmFRD8Q_Nb4RQpQk_uFnMaiZ'; // Token de autenticación válido y vigente
+            //const processKey = '5180295';  // El key del proceso que deseas activar
+
+            // URL y datos para activar el proceso
+            const processUrl = `${orchestratorUrl}/uleam_proyecto/DefaultTenant/orchestrator_/odata/Queues/UiPathODataSvc.AddQueueItem`;
+            const jobData = {
+                startInfo: {
+                    //ReleaseKey: processKey,
+                    Strategy: 'Specific',
+                    RobotIds: [],
+                    InputArguments: `{\"cedula\":\"${cedula}\",\"TipoDocumento\":\"${Tipodedocumento}\"}`,
+                    JobsCount: 1,
+                    Urgency: 'Normal'
+                }
+            };
+
+            // Realizar solicitud POST para activar el proceso
+            await axios.post(processUrl, jobData, {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                    "X-UIPATH-OrganizationUnitId":5180295,
+                    'Content-Type': 'application/json'
+                    
+                }
+            });
+
+            console.log('Proceso activado en UiPath Orchestrator.');
+        } catch (error) {
+            console.error('Error al activar el proceso en UiPath Orchestrator:', error);
+            respuesta += ' Hubo un error al activar el proceso en UiPath Orchestrator.';
+        }
     } else {
         respuesta = 'Por favor, ingresa tanto la cédula como el tipo de documento.';
     }
@@ -30,6 +61,7 @@ app.post('/webhook', (req, res) => {
     });
 });
 
+// Iniciar el servidor
 app.listen(port, () => {
   console.log(`Webhook escuchando en el puerto ${port}`);
 });
