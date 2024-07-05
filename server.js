@@ -27,14 +27,16 @@ app.post('/webhook', async (req, res) => {
             // URL y datos para activar el proceso
             const processUrl = `${orchestratorUrl}/uleam_proyecto/DefaultTenant/orchestrator_/odata/Queues/UiPathODataSvc.AddQueueItem`;
             const jobData = {
-                startInfo: {
-                    //ReleaseKey: processKey,
-                    Strategy: 'Specific',
-                    RobotIds: [],
-                    InputArguments: `{\"cedula\":\"${cedula}\",\"TipoDocumento\":\"${Tipodedocumento}\"}`,
-                    JobsCount: 1,
-                    Urgency: 'Normal'
-                }
+                itemData: {
+                    "Priority": "Normal",
+                    "Name": "tesis",
+                    "SpecificContent": {
+                    "Name@odata.type": "#String",
+                    "cedula": "${cedula}",
+                    "Tipodedocumento": "${Tipodedocumento}"
+                },
+                "Reference": "Dialogflow"
+            }
             };
 
             // Realizar solicitud POST para activar el proceso
