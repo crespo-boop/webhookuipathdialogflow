@@ -12,7 +12,7 @@ app.post('/webhook', (req, res) => {
     let respuesta = '';
 
     if (Tipodedocumento && cedula) {
-        respuesta = `Tu cédula es ${cedula}. Has seleccionado procesar un documento de tipo ${tipoDocumento}.`;
+        respuesta = `Tu cédula es ${cedula}. Has seleccionado procesar un documento de tipo ${Tipodedocumento}.`;
         // Aquí puedes agregar la lógica para generar el certificado correspondiente
     } else {
         respuesta = 'Por favor, ingresa tanto la cédula como el tipo de documento.';
