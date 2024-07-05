@@ -25,8 +25,9 @@ app.post('/webhook', async (req, res) => {
             //const processKey = '5180295';  // El key del proceso que deseas activar
 
             // URL y datos para activar el proceso
-            const processUrl = `https://cloud.uipath.com/uleam_proyecto/DefaultTenant/orchestrator_/odata/Queues/UiPathODataSvc.AddQueueItem`;
-            const jobData = {
+            const processUrl = "https://cloud.uipath.com/uleam_proyecto/DefaultTenant/orchestrator_/odata/Queues/UiPathODataSvc.AddQueueItem";
+            const jobData = 
+            {
                 itemData: {
                     "Priority": "Normal",
                     "Name": "tesis",
@@ -38,7 +39,9 @@ app.post('/webhook', async (req, res) => {
                 "Reference": "Dialogflow"
             }
             };
-
+            console.log('Authorization', `Bearer ${authToken}`,
+                    "X-UIPATH-OrganizationUnitId",5180295,
+                    'Content-Type', 'application/json')
             // Realizar solicitud POST para activar el proceso
             await axios.post(processUrl, jobData, {
                 headers: {
@@ -53,7 +56,7 @@ app.post('/webhook', async (req, res) => {
 
         } catch (error) {
             console.log("===================================================================")
-            console.error('Error al activar el proceso en UiPath Orchestrator:', error);
+            console.log('Error al activar el proceso en UiPath Orchestrator:', error);
             respuesta +=  error;
             console.log("===========================================================================")
         
