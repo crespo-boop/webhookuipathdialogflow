@@ -2,12 +2,19 @@ const express = require('express');
 const bodyParser = require('body-parser');
 
 const app = express();
+const port = process.env.PORT || 10000;  // Render debería establecer la variable de entorno PORT
+
 app.use(bodyParser.json());
 
 app.post('/webhook', (req, res) => {
+    console.log('Request Body:', JSON.stringify(req.body, null, 2));
+
     const { queryResult } = req.body;
-    const Tipodedocumento = queryResult.parameters.tipoDocumento;
+    const Tipodedocumento = queryResult.parameters.Tipodedocumento;
     const cedula = queryResult.parameters.cedula;
+
+    console.log('Tipodedocumento:', Tipodedocumento);
+    console.log('cedula:', cedula);
 
     let respuesta = '';
 
@@ -23,6 +30,6 @@ app.post('/webhook', (req, res) => {
     });
 });
 
-app.listen(10000, () => {
-    console.log('Webhook escuchando en el puerto 10000');
+app.listen(port, () => {
+  console.log(`Webhook escuchando en el puerto ${port}`);
 });
