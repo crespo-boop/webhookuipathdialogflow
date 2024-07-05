@@ -1,31 +1,28 @@
-// Importa las librerías necesarias
 const express = require('express');
 const bodyParser = require('body-parser');
 
-// Crea una instancia de Express
 const app = express();
-
-// Configura el middleware para analizar solicitudes JSON
 app.use(bodyParser.json());
 
-// Ruta para el webhook
 app.post('/webhook', (req, res) => {
-    // Extrae los parámetros de la solicitud de Dialogflow
     const { queryResult } = req.body;
+    const Tipodedocumento = queryResult.parameters.tipoDocumento;
     const cedula = queryResult.parameters.cedula;
-    const nombre = queryResult.parameters.nombre;
 
-    // Realiza cualquier procesamiento necesario (por ejemplo, consulta a una base de datos)
-    // Aquí simplemente devolvemos una respuesta con los datos recibidos
-    const respuesta = `¡Hola ${nombre}! Tu cédula es ${cedula}.`;
+    let respuesta = '';
 
-    // Envía la respuesta a Dialogflow
+    if (Tipodedocumento && cedula) {
+        respuesta = `Tu cédula es ${cedula}. Has seleccionado procesar un documento de tipo ${tipoDocumento}.`;
+        // Aquí puedes agregar la lógica para generar el certificado correspondiente
+    } else {
+        respuesta = 'Por favor, ingresa tanto la cédula como el tipo de documento.';
+    }
+
     res.json({
         fulfillmentText: respuesta,
     });
 });
 
-// Inicia el servidor en el puerto 3000
 app.listen(10000, () => {
     console.log('Webhook escuchando en el puerto 10000');
 });
