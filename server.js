@@ -33,6 +33,7 @@ app.post('/webhook', async (req, res) => {
                     "Name": "tesis",
                     "SpecificContent": {
                     "Name@odata.type": "#String",
+                    "Name": "Default",
                     "cedula": cedula,
                     "Tipodedocumento": Tipodedocumento
                 },
