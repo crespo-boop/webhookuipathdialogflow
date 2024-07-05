@@ -20,12 +20,12 @@ app.post('/webhook', async (req, res) => {
 
         try {
             // Configuración de UiPath Orchestrator
-            const orchestratorUrl = 'https://cloud.uipath.com';
+        
             const authToken = 'rt_A40BBDF3FEF867EA85582E3C53C4AFE8555A3339159B8B03ADEEE10DE304182C-1'; // Token de autenticación válido y vigente
             //const processKey = '5180295';  // El key del proceso que deseas activar
 
             // URL y datos para activar el proceso
-            const processUrl = `${orchestratorUrl}/uleam_proyecto/DefaultTenant/orchestrator_/odata/Queues/UiPathODataSvc.AddQueueItem`;
+            const processUrl = `https://cloud.uipath.com/uleam_proyecto/DefaultTenant/orchestrator_/odata/Queues/UiPathODataSvc.AddQueueItem`;
             const jobData = {
                 itemData: {
                     "Priority": "Normal",
