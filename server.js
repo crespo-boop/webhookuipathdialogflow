@@ -32,8 +32,8 @@ app.post('/webhook', async (req, res) => {
                     "Name": "tesis",
                     "SpecificContent": {
                     "Name@odata.type": "#String",
-                    "cedula": "${cedula}",
-                    "Tipodedocumento": "${Tipodedocumento}"
+                    "cedula": cedula,
+                    "Tipodedocumento": Tipodedocumento
                 },
                 "Reference": "Dialogflow"
             }
@@ -52,7 +52,7 @@ app.post('/webhook', async (req, res) => {
             console.log('Proceso activado en UiPath Orchestrator.');
         } catch (error) {
             console.error('Error al activar el proceso en UiPath Orchestrator:', error);
-            respuesta += ' Hubo un error al activar el proceso en UiPath Orchestrator.';
+            respuesta += ' Error al activar el proceso en UiPath Orchestrator:', error;
         }
     } else {
         respuesta = 'Por favor, ingresa tanto la cédula como el tipo de documento.';
