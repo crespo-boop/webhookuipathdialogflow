@@ -9,21 +9,37 @@ const port = process.env.PORT || 10000;
 app.use(bodyParser.json());
 
 // Configuración de la conexión a la base de datos MySQL
-const db = mysql.createConnection({
-    host: '206.206.127.140',
-    user: 'crespito',
-    password: '2002',
-    database: 'tesis'
-});
+let db;
 
-// Conectar a la base de datos
-db.connect((err) => {
-    if (err) {
-        console.error('Error al conectar a la base de datos:', err);
-        return;
-    }
-    console.log('Conectado a la base de datos MySQL');
-});
+const connectToDatabase = () => {
+    db = mysql.createConnection({
+        host: '206.206.127.140',
+        user: 'crespito',
+        password: '2002',
+        database: 'tesis'
+    });
+
+    db.connect((err) => {
+        if (err) {
+            console.error('Error al conectar a la base de datos:', err);
+            setTimeout(connectToDatabase, 5000); // Reintenta la conexión después de 5 segundos
+        } else {
+            console.log('Conectado a la base de datos MySQL');
+        }
+    });
+
+    db.on('error', (err) => {
+        console.error('Error en la conexión a la base de datos:', err);
+        if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+            // Reconectar si la conexión se pierde
+            connectToDatabase();
+        } else {
+            throw err;
+        }
+    });
+};
+
+connectToDatabase();
 
 // Función para verificar si la cédula existe en la base de datos
 const verificarCedula = (cedula, callback) => {
