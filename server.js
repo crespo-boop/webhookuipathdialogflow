@@ -41,13 +41,14 @@ const verificarCedula = (cedula, callback) => {
 
 // Endpoint para el webhook de Dialogflow
 app.post('/webhook', async (req, res) => {
-    const { queryResult, intent } = req.body;
-    const intentName = intent.displayName;  // Nombre del intent activado
+    const queryResult = req.body.queryResult || {};
+    const intent = queryResult.intent || {};
+    const intentName = intent.displayName || 'Intent desconocido';  // Nombre del intent activado, valor por defecto si no existe
 
     let respuesta = '';
     let followUp = '';
-    const cedula = queryResult.parameters.cedula; // La cédula proporcionada por Dialogflow está en minúsculas
-    const tipoDocumento = queryResult.parameters.documento;
+    const cedula = queryResult.parameters ? queryResult.parameters.cedula : null; // La cédula proporcionada por Dialogflow
+    const TipoDocumento = queryResult.parameters ? queryResult.parameters.TipoDocumento : null;
 
     switch (intentName) {
         case 'ActivarProceso': // Intent para iniciar el proceso
@@ -83,7 +84,7 @@ app.post('/webhook', async (req, res) => {
             break;
 
         case 'TipoDocumento': // Intent para recibir el tipo de documento
-            if (tipoDocumento) {
+            if (TipoDocumento) {
                 try {
                     // Configuración para activar el proceso en UiPath
                     const authToken = 'rt_A40BBDF3FEF867EA85582E3C53C4AFE8555A3339159B8B03ADEEE10DE304182C-1'; // Reemplaza con tu token de autenticación válido
@@ -94,7 +95,7 @@ app.post('/webhook', async (req, res) => {
                             "Name": "tesis",
                             "SpecificContent": {
                                 "cedula": cedula,
-                                "documento": tipoDocumento
+                                "documento": TipoDocumento
                             },
                             "Reference": "Dialogflow"
                         }
@@ -109,7 +110,7 @@ app.post('/webhook', async (req, res) => {
                         }
                     });
 
-                    respuesta = `Tu solicitud para el documento de tipo ${tipoDocumento} ha sido procesada.`;
+                    respuesta = `Tu solicitud para el documento de tipo ${TipoDocumento} ha sido procesada.`;
                 } catch (error) {
                     console.error('Error al activar el proceso en UiPath:', error);
                     respuesta = 'Hubo un problema al procesar tu solicitud. Por favor, inténtalo de nuevo más tarde.';
