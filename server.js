@@ -1,77 +1,144 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
+const mysql = require('mysql');
 
 const app = express();
 const port = process.env.PORT || 10000;
 
 app.use(bodyParser.json());
 
+// Configuración de la conexión a la base de datos MySQL
+const db = mysql.createConnection({
+    host: '206.206.127.140',
+    user: 'crespito',
+    password: '2002',
+    database: 'tesis'
+});
+
+// Conectar a la base de datos
+db.connect((err) => {
+    if (err) {
+        console.error('Error al conectar a la base de datos:', err);
+        return;
+    }
+    console.log('Conectado a la base de datos MySQL');
+});
+
+// Función para verificar si la cédula existe en la base de datos
+const verificarCedula = (cedula, callback) => {
+    const Cedula = cedula.toUpperCase(); // Convertir cédula a mayúsculas
+    const query = 'SELECT * FROM estudiante WHERE Cedula = ?'; // La columna en la base de datos está en mayúsculas
+    db.query(query, [Cedula], (err, results) => {
+        if (err) {
+            console.error('Error al ejecutar la consulta:', err);
+            callback(err, null);
+        } else {
+            callback(null, results.length > 0);
+        }
+    });
+};
+
 // Endpoint para el webhook de Dialogflow
 app.post('/webhook', async (req, res) => {
-    const { queryResult } = req.body;
-    const Tipodedocumento = queryResult.parameters.Tipodedocumento;
-    const cedula = queryResult.parameters.cedula;
+    const { queryResult, intent } = req.body;
+    const intentName = intent.displayName;  // Nombre del intent activado
 
     let respuesta = '';
+    let followUp = '';
+    const cedula = queryResult.parameters.cedula; // La cédula proporcionada por Dialogflow está en minúsculas
+    const tipoDocumento = queryResult.parameters.documento;
 
-    if (Tipodedocumento && cedula) {
-        respuesta = `Tu cédula es ${cedula}. Has seleccionado procesar un documento de tipo ${Tipodedocumento}.`;
+    switch (intentName) {
+        case 'ActivarProceso': // Intent para iniciar el proceso
+            respuesta = 'Por favor, facilítame tu cédula.';
+            break;
 
-        try {
-            // Configuración de UiPath Orchestrator
-        
-            const authToken = 'rt_A40BBDF3FEF867EA85582E3C53C4AFE8555A3339159B8B03ADEEE10DE304182C-1'; // Token de autenticación válido y vigente
-            //const processKey = '5180295';  // El key del proceso que deseas activar
-
-            // URL y datos para activar el proceso
-            const processUrl = "https://cloud.uipath.com/uleam_proyecto/DefaultTenant/orchestrator_/odata/Queues/UiPathODataSvc.AddQueueItem";
-            const jobData = 
-            {
-                itemData: {
-                    "Priority": "Normal",
-                    "Name": "tesis",
-                    "SpecificContent": {
-                    "Name@odata.type": "#String",
-                    "Name": "Default",
-                    "cedula": cedula,
-                    "Tipodedocumento": Tipodedocumento
-                },
-                "Reference": "Dialogflow"
+        case 'ObtenerCedula': // Intent para recibir la cédula
+            if (cedula) {
+                verificarCedula(cedula, async (err, existe) => {
+                    if (err) {
+                        respuesta = 'Hubo un problema al verificar la cédula. Por favor, inténtalo de nuevo más tarde.';
+                    } else if (existe) {
+                        followUp = 'SolicitarTipoDocumento'; // Indica que la cédula es válida y necesitamos el tipo de documento
+                        respuesta = 'Tu cédula ha sido recibida. Ahora, ¿qué tipo de documento necesitas?';
+                    } else {
+                        respuesta = 'La cédula proporcionada no se encuentra en nuestra base de datos. Por favor, verifica e intenta de nuevo.';
+                    }
+                    res.json({
+                        fulfillmentText: respuesta,
+                        followUpEventInput: followUp ? {
+                            name: followUp,
+                            parameters: {},
+                            languageCode: 'es'
+                        } : undefined
+                    });
+                });
+            } else {
+                respuesta = 'Por favor, proporciona una cédula.';
+                res.json({
+                    fulfillmentText: respuesta
+                });
             }
-            };
-            console.log('Authorization', `Bearer ${authToken}`,
-                    "X-UIPATH-OrganizationUnitId",5180295,
-                    'Content-Type', 'application/json')
-            // Realizar solicitud POST para activar el proceso
-            await axios.post(processUrl, jobData, {
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    "X-UIPATH-OrganizationUnitId":5180295,
-                    'Content-Type': 'application/json'
-                    
+            break;
+
+        case 'TipoDocumento': // Intent para recibir el tipo de documento
+            if (tipoDocumento) {
+                try {
+                    // Configuración para activar el proceso en UiPath
+                    const authToken = 'rt_A40BBDF3FEF867EA85582E3C53C4AFE8555A3339159B8B03ADEEE10DE304182C-1'; // Reemplaza con tu token de autenticación válido
+                    const processUrl = "https://cloud.uipath.com/uleam_proyecto/DefaultTenant/orchestrator_/odata/Queues/UiPathODataSvc.AddQueueItem";
+                    const jobData = {
+                        itemData: {
+                            "Priority": "Normal",
+                            "Name": "tesis",
+                            "SpecificContent": {
+                                "cedula": cedula,
+                                "documento": tipoDocumento
+                            },
+                            "Reference": "Dialogflow"
+                        }
+                    };
+
+                    // Activar el proceso en UiPath
+                    await axios.post(processUrl, jobData, {
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`,
+                            "X-UIPATH-OrganizationUnitId": 5180295,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    respuesta = `Tu solicitud para el documento de tipo ${tipoDocumento} ha sido procesada.`;
+                } catch (error) {
+                    console.error('Error al activar el proceso en UiPath:', error);
+                    respuesta = 'Hubo un problema al procesar tu solicitud. Por favor, inténtalo de nuevo más tarde.';
                 }
+            } else {
+                respuesta = 'Por favor, proporciona el tipo de documento.';
+            }
+            res.json({
+                fulfillmentText: respuesta
             });
+            break;
 
-            console.log('Proceso activado en UiPath Orchestrator.');
+        case 'SolicitarOtroDocumento': // Intent para preguntar si el usuario quiere otro documento
+            respuesta = '¿Necesitas algún otro documento?';
+            res.json({
+                fulfillmentText: respuesta
+            });
+            break;
 
-        } catch (error) {
-            console.log("===================================================================")
-            console.log('Error al activar el proceso en UiPath Orchestrator:', error);
-            respuesta +=  error;
-            console.log("===========================================================================")
-        
-        }
-    } else {
-        respuesta = 'Por favor, ingresa tanto la cédula como el tipo de documento.';
+        default:
+            respuesta = 'No entiendo lo que dices. Por favor, proporciona la información solicitada.';
+            res.json({
+                fulfillmentText: respuesta
+            });
+            break;
     }
-
-    res.json({
-        fulfillmentText: respuesta,
-    });
 });
 
 // Iniciar el servidor
 app.listen(port, () => {
-  console.log(`Webhook escuchando en el puerto ${port}`);
+    console.log(`Webhook escuchando en el puerto ${port}`);
 });
