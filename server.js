@@ -11,7 +11,7 @@ app.post('/webhook', async (req, res) => {
     const { queryResult, outputContexts } = req.body;
 
     // Verifica si outputContexts está presente
-    if (!outputContexts) {
+    if (!outputContexts || !Array.isArray(outputContexts)) {
         return res.json({
             fulfillmentText: 'Error interno. No se encontraron los contextos necesarios.',
         });
@@ -65,7 +65,7 @@ app.post('/webhook', async (req, res) => {
             respuesta += ' Error al activar el proceso.';
         }
     } else {
-        respuesta = 'Porfavor usted ha seleccionado algo mal';
+        respuesta = 'Por favor, ingresa tanto la cédula como el tipo de documento.';
     }
 
     res.json({
@@ -76,4 +76,3 @@ app.post('/webhook', async (req, res) => {
 app.listen(port, () => {
     console.log(`Webhook escuchando en el puerto ${port}`);
 });
-
