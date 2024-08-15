@@ -65,7 +65,7 @@ app.post('/webhook', async (req, res) => {
             respuesta += ' Error al activar el proceso.';
         }
     } else {
-        respuesta = 'Por favor, ingresa tanto la cédula como el tipo de documento.';
+        respuesta = 'Porfavor usted ha seleccionado algo mal';
     }
 
     res.json({
