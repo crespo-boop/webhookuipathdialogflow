@@ -1,14 +1,22 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+const axios = require('axios');
+
+const app = express();
+const port = process.env.PORT || 10000;
+
+app.use(bodyParser.json());
+
+// Endpoint para el webhook de Dialogflow
 app.post('/webhook', async (req, res) => {
     const { queryResult } = req.body;
-
-    // Captura parámetros directamente
     const cedula = queryResult.parameters.cedula;
     const Tipodedocumento = queryResult.parameters.Tipodedocumento;
 
     let respuesta = '';
 
     if (cedula && Tipodedocumento) {
-        respuesta = `Tu cédula es ${cedula}. Has seleccionado procesar un documento de tipo ${Tipodedocumento}.`;
+        respuesta = `Recibí tu cédula ${cedula} y el tipo de documento ${Tipodedocumento}. Estoy procesando tu solicitud.`;
 
         try {
             const authToken = 'rt_A40BBDF3FEF867EA85582E3C53C4AFE8555A3339159B8B03ADEEE10DE304182C-1';
@@ -25,7 +33,7 @@ app.post('/webhook', async (req, res) => {
                     "Reference": "Dialogflow"
                 }
             };
-            
+
             await axios.post(processUrl, jobData, {
                 headers: {
                     'Authorization': `Bearer ${authToken}`,
@@ -35,13 +43,21 @@ app.post('/webhook', async (req, res) => {
             });
 
             console.log('Proceso activado en UiPath Orchestrator.');
-            return res.json({ fulfillmentText: respuesta });
-
+            
         } catch (error) {
             console.log('Error al activar el proceso en UiPath Orchestrator:', error);
-            return res.json({ fulfillmentText: 'Error al activar el proceso.' });
+            respuesta += ' Hubo un error al procesar tu solicitud.';
         }
     } else {
-        return res.json({ fulfillmentText: 'Por favor, ingresa tanto la cédula como el tipo de documento.' });
+        respuesta = 'Por favor, proporciona tanto tu cédula como el tipo de documento.';
     }
+
+    res.json({
+        fulfillmentText: respuesta
+    });
+});
+
+// Iniciar el servidor
+app.listen(port, () => {
+    console.log(`Webhook escuchando en el puerto ${port}`);
 });
