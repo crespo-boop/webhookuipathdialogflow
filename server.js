@@ -11,8 +11,22 @@ app.use(bodyParser.json());
 app.post('/webhook', async (req, res) => {
     const { queryResult, outputContexts } = req.body;
     
-    // Extraer los parámetros del Intent 3 usando el contexto
+    if (!outputContexts) {
+        console.log('outputContexts no está presente en el request body');
+        return res.json({
+            fulfillmentText: 'Error interno. Por favor, intente de nuevo.',
+        });
+    }
+
     const contextTipoDocumento = outputContexts.find(context => context.name.endsWith('/await_tipo_documento'));
+
+    if (!contextTipoDocumento) {
+        console.log('Contexto await_tipo_documento no encontrado');
+        return res.json({
+            fulfillmentText: 'No se encontró el contexto necesario para procesar la solicitud.',
+        });
+    }
+
     const cedula = contextTipoDocumento.parameters.cedula;
     const Tipodedocumento = contextTipoDocumento.parameters.Tipodedocumento;
 
@@ -22,8 +36,7 @@ app.post('/webhook', async (req, res) => {
         respuesta = `Tu cédula es ${cedula}. Has seleccionado procesar un documento de tipo ${Tipodedocumento}.`;
 
         try {
-            // Configuración de UiPath Orchestrator
-            const authToken = 'rt_A40BBDF3FEF867EA85582E3C53C4AFE8555A3339159B8B03ADEEE10DE304182C-1'; // Token de autenticación válido y vigente
+            const authToken = 'rt_A40BBDF3FEF867EA85582E3C53C4AFE8555A3339159B8B03ADEEE10DE304182C-1';
             const processUrl = "https://cloud.uipath.com/uleam_proyecto/DefaultTenant/orchestrator_/odata/Queues/UiPathODataSvc.AddQueueItem";
             
             const jobData = {
@@ -59,9 +72,4 @@ app.post('/webhook', async (req, res) => {
     res.json({
         fulfillmentText: respuesta,
     });
-});
-
-// Iniciar el servidor
-app.listen(port, () => {
-  console.log(`Webhook escuchando en el puerto ${port}`);
 });
