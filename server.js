@@ -7,28 +7,27 @@ const port = process.env.PORT || 10000;
 
 app.use(bodyParser.json());
 
-// Endpoint para el webhook de Dialogflow
 app.post('/webhook', async (req, res) => {
     const { queryResult, outputContexts } = req.body;
-    
+
+    // Verifica si outputContexts está presente
     if (!outputContexts) {
-        console.log('outputContexts no está presente en el request body');
         return res.json({
-            fulfillmentText: 'Error interno. Por favor, intente de nuevo.',
+            fulfillmentText: 'Error interno. No se encontraron los contextos necesarios.',
         });
     }
 
+    // Busca el contexto específico para el tipo de documento
     const contextTipoDocumento = outputContexts.find(context => context.name.endsWith('/await_tipo_documento'));
 
     if (!contextTipoDocumento) {
-        console.log('Contexto await_tipo_documento no encontrado');
         return res.json({
             fulfillmentText: 'No se encontró el contexto necesario para procesar la solicitud.',
         });
     }
 
     const cedula = contextTipoDocumento.parameters.cedula;
-    const Tipodedocumento = contextTipoDocumento.parameters.Tipodedocumento;
+    const Tipodedocumento = queryResult.parameters.Tipodedocumento; // Parámetro capturado en este intent
 
     let respuesta = '';
 
@@ -73,3 +72,8 @@ app.post('/webhook', async (req, res) => {
         fulfillmentText: respuesta,
     });
 });
+
+app.listen(port, () => {
+    console.log(`Webhook escuchando en el puerto ${port}`);
+});
+
