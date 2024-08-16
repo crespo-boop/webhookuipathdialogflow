@@ -21,7 +21,7 @@ app.post('/webhook', async (req, res) => {
             itemData: {
                 "Priority": "Normal",
                 "Name": "tesis",
-                "Description": "Procesamiento de documento", // Asegúrate de que este campo sea correcto según tu configuración de UiPath
+                "Description": "Procesamiento de documento", 
                 "SpecificContent": {
                     "Name@odata.type": "#String",
                     "Name": "Default",
@@ -34,22 +34,26 @@ app.post('/webhook', async (req, res) => {
 
         try {
             // Configuración de UiPath Orchestrator (reemplaza con tus valores)
-            const authToken = 'rt_34C199550857FECB0FC5E0390130D76F724E921330095B52621DD4028AC9760A-1';
+            const authToken = 'tu_token_de_autenticacion';
             const processUrl = 'https://cloud.uipath.com/tu_tenant/DefaultTenant/orchestrator_/odata/Queues/UiPathODataSvc.AddQueueItem';
 
             const response = await axios.post(processUrl, jobData, {
                 headers: {
                     'Authorization': `Bearer ${authToken}`,
-                    "X-UIPATH-OrganizationUnitId":5180295,
+                    "X-UIPATH-OrganizationUnitId": tu_id_de_organizacion,
                     'Content-Type': 'application/json'
                 }
             });
 
-            console.log('Respuesta de UiPath:', response.data); // Registra la respuesta completa
-            respuesta += 'Tu solicitud ha sido procesada correctamente.';
+            console.log('Proceso activado en UiPath Orchestrator:', response.data);
+
+            // Devuelve un JSON con mensaje de éxito
+            res.json({
+                success: true,
+                message: 'Tu solicitud ha sido procesada correctamente.'
+            });
         } catch (error) {
             console.error('Error al activar el proceso en UiPath Orchestrator:', error);
-            console.error('Respuesta de UiPath:', error.response?.data); // Registra la respuesta de error, si hay alguna
 
             if (error.response && error.response.data.message.includes('itemData')) {
                 console.error('El campo itemData es inválido o falta algún campo requerido.');
@@ -64,15 +68,17 @@ app.post('/webhook', async (req, res) => {
                 console.error('Ocurrió un error inesperado:', error);
                 respuesta += 'Ocurrió un error inesperado. Por favor, inténtalo más tarde.';
             }
-        }
 
-        res.json({
-            fulfillmentText: respuesta
-        });
+            res.json({
+                success: false,
+                message: respuesta
+            });
+        }
     } else {
         respuesta = 'Por favor, ingresa tanto la cédula como el tipo de documento.';
         res.json({
-            fulfillmentText: respuesta
+            success: false,
+            message: respuesta
         });
     }
 });
