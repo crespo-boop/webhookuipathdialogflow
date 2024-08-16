@@ -34,8 +34,8 @@ app.post('/webhook', async (req, res) => {
 
         try {
             // Configuración de UiPath Orchestrator
-            const authToken = 'tu_token_de_autenticacion';
-            const processUrl = 'https://tu_url_de_uipath';
+            const authToken = 'rt_34C199550857FECB0FC5E0390130D76F724E921330095B52621DD4028AC9760A-1';
+            const processUrl = 'https://cloud.uipath.com/uleam_proyecto/DefaultTenant/orchestrator_/odata/Queues/UiPathODataSvc.AddQueueItem';
 
             const response = await axios.post(processUrl, jobData, {
                 headers: {
