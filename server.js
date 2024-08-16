@@ -21,7 +21,7 @@ app.post('/webhook', async (req, res) => {
         try {
             // Configuración de UiPath Orchestrator
         
-            const authToken = 'rt_A40BBDF3FEF867EA85582E3C53C4AFE8555A3339159B8B03ADEEE10DE304182C-1'; // Token de autenticación válido y vigente
+            const authToken = 'rt_34C199550857FECB0FC5E0390130D76F724E921330095B52621DD4028AC9760A-1'; // Token de autenticación válido y vigente
             //const processKey = '5180295';  // El key del proceso que deseas activar
 
             // URL y datos para activar el proceso
