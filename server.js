@@ -21,7 +21,7 @@ app.post('/webhook', async (req, res) => {
             itemData: {
                 "Priority": "Normal",
                 "Name": "tesis",
-                "Description": "Procesamiento de documento", 
+                "Description": "Procesamiento de documento",
                 "SpecificContent": {
                     "Name@odata.type": "#String",
                     "Name": "Default",
@@ -45,33 +45,22 @@ app.post('/webhook', async (req, res) => {
                 }
             });
 
-            console.log('Proceso activado en UiPath Orchestrator:', response.data);
+            console.log('Respuesta de UiPath:', response.data);
 
-            // Devuelve un JSON con mensaje de éxito
+            // Devuelve un JSON con mensaje de éxito y la respuesta de UiPath (opcional)
             res.json({
                 success: true,
-                message: 'Tu solicitud ha sido procesada correctamente.'
+                message: 'Tu solicitud ha sido procesada correctamente.',
+                uiPathResponse: response.data
             });
         } catch (error) {
             console.error('Error al activar el proceso en UiPath Orchestrator:', error);
 
-            if (error.response && error.response.data.message.includes('itemData')) {
-                console.error('El campo itemData es inválido o falta algún campo requerido.');
-                respuesta += 'Ocurrió un error al procesar tu solicitud. Por favor, verifica los datos ingresados.';
-            } else if (error.response && error.response.status === 401) {
-                console.error('Error de autenticación');
-                respuesta += 'Error de autenticación. Verifica tu token de acceso.';
-            } else if (error.response && error.response.status === 404) {
-                console.error('Proceso no encontrado en UiPath');
-                respuesta += 'El proceso que intentas activar no existe en UiPath.';
-            } else {
-                console.error('Ocurrió un error inesperado:', error);
-                respuesta += 'Ocurrió un error inesperado. Por favor, inténtalo más tarde.';
-            }
-
-            res.json({
+            // Devuelve un JSON con mensaje de error y el error detallado
+            res.status(500).json({
                 success: false,
-                message: respuesta
+                message: 'Ocurrió un error al procesar tu solicitud.',
+                error: error.message
             });
         }
     } else {
