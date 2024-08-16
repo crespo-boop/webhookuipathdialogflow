@@ -22,6 +22,7 @@ app.post('/webhook', async (req, res) => {
       // Configuración de UiPath Orchestrator
       const authToken = 'rt_34C199550857FECB0FC5E0390130D76F724E921330095B52621DD4028AC9760A-1'; // Token de autenticación válido y vigente
       //const processKey = '5180295'; // El key del proceso que deseas activar
+      const tenantName = 'DefaultTenant'; // Reemplaza con el nombre de tu inquilino
 
       const processUrl = "https://cloud.uipath.com/uleam_proyecto/DefaultTenant/orchestrator_/odata/Queues/UiPathODataSvc.AddQueueItem";
       const jobData = {
@@ -33,6 +34,7 @@ app.post('/webhook', async (req, res) => {
         headers: {
           'Authorization': `Bearer ${authToken}`,
           "X-UIPATH-OrganizationUnitId": 5180295,
+          'X-UIPATH-TenantName': tenantName,
           'Content-Type': 'application/json'
         }
       });
