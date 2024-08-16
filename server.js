@@ -33,28 +33,36 @@ app.post('/webhook', async (req, res) => {
         };
 
         try {
-            // Configuración de UiPath Orchestrator
+            // Configuración de UiPath Orchestrator (reemplaza con tus valores)
             const authToken = 'rt_34C199550857FECB0FC5E0390130D76F724E921330095B52621DD4028AC9760A-1';
-            const processUrl = 'https://cloud.uipath.com/uleam_proyecto/DefaultTenant/orchestrator_/odata/Queues/UiPathODataSvc.AddQueueItem';
+            const processUrl = 'https://cloud.uipath.com/tu_tenant/DefaultTenant/orchestrator_/odata/Queues/UiPathODataSvc.AddQueueItem';
 
             const response = await axios.post(processUrl, jobData, {
                 headers: {
                     'Authorization': `Bearer ${authToken}`,
-                    "X-UIPATH-OrganizationUnitId": 5180295,
+                    "X-UIPATH-OrganizationUnitId":5180295,
                     'Content-Type': 'application/json'
                 }
             });
 
-            console.log('Proceso activado en UiPath Orchestrator:', response.data);
+            console.log('Respuesta de UiPath:', response.data); // Registra la respuesta completa
             respuesta += 'Tu solicitud ha sido procesada correctamente.';
         } catch (error) {
             console.error('Error al activar el proceso en UiPath Orchestrator:', error);
+            console.error('Respuesta de UiPath:', error.response?.data); // Registra la respuesta de error, si hay alguna
 
             if (error.response && error.response.data.message.includes('itemData')) {
                 console.error('El campo itemData es inválido o falta algún campo requerido.');
                 respuesta += 'Ocurrió un error al procesar tu solicitud. Por favor, verifica los datos ingresados.';
+            } else if (error.response && error.response.status === 401) {
+                console.error('Error de autenticación');
+                respuesta += 'Error de autenticación. Verifica tu token de acceso.';
+            } else if (error.response && error.response.status === 404) {
+                console.error('Proceso no encontrado en UiPath');
+                respuesta += 'El proceso que intentas activar no existe en UiPath.';
             } else {
-                respuesta += 'Ocurrió un error inesperado.';
+                console.error('Ocurrió un error inesperado:', error);
+                respuesta += 'Ocurrió un error inesperado. Por favor, inténtalo más tarde.';
             }
         }
 
@@ -72,5 +80,4 @@ app.post('/webhook', async (req, res) => {
 // Iniciar el servidor
 app.listen(port, () => {
     console.log(`Webhook escuchando en el puerto ${port}`);
-    console.log(`intento ${port}`);
 });
